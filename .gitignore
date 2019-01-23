@@ -107,4 +107,4 @@ _backup/
 .idea/
 data/
 *.csv
-log*.txt
+log*.log

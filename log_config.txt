@@ -1,0 +1,51 @@
+[loggers]
+keys=root
+
+[handlers]
+keys=consoleHandler, fileHandler 
+#, rotatingFileHandler
+
+[formatters]
+keys=mainFormatter
+
+[logger_root]
+level=DEBUG
+handlers=consoleHandler, fileHandler
+qualname=main_logger
+
+[handler_consoleHandler]
+class=StreamHandler
+formatter=mainFormatter
+args=(sys.stdout,)
+
+[handler_fileHandler]
+class=FileHandler
+formatter=mainFormatter
+# This causes a new file to be created for each script
+# Change time.strftime("%Y%m%d%H%M%S") to time.strftime("%Y%m%d")
+# And only one log per day will be created. All messages will be amended to it.
+args=("log_" + time.strftime("%%Y%%m%%d")+'.log', 'a')
+
+#[handler_rotatingFileHandler]
+#class=logging.handlers.TimedRotatingFileHandler
+#level=DEBUG
+#formatter=mainFormatter
+#args=('log_'+time.strftime("%%Y%%m%%d")+'.log')
+
+
+[formatter_mainFormatter]
+#name is the name of the logger root or Admin_Client
+#levelname is the log message level debug, warn, ect 
+#lineno is the line number from where the call to log is made
+#04d is simple formatting to ensure there are four numeric places with leading zeros
+#4s would work as well, but would simply pad the string with leading spaces, right justify
+#-4s would work as well, but would simply pad the string with trailing spaces, left justify
+#filename is the file name from where the call to log is made
+#funcName is the method name from where the call to log is made
+#format=%(asctime)s | %(lineno)d | %(message)s
+#format=%(asctime)s | %(name)s | %(levelname)s | %(message)s
+#format=%(asctime)s | %(name)s | %(module)s-%(lineno) | %(levelname)s | %(message)s
+#format=%(asctime)s | %(name)s | %(module)s-%(lineno)04d | %(levelname)s | %(message)s
+#format=%(asctime)s | %(name)s | %(module)s-%(lineno)4s | %(levelname)-8s | %(message)s
+
+format=%(asctime)s | %(levelname)s | %(filename)s | %(funcName)s | %(message)s
