@@ -353,7 +353,8 @@ class DataDiscovery:
     Output: dataframe with alarms ordered by duration.    
     '''
     def split_dur_alarms(self, table_global):
-        alarm_tags = np.unique(table_global['Most_severe_alarm_name'].values)
+        alarms_tagnames = [alarm for alarm in table_global['Most_severe_alarm_name'].values if type(alarm) == str]
+        alarm_tags = np.unique(np.array(alarms_tagnames))
         percentage_dur = []
         total_dur = []
         average_dur = []
@@ -541,3 +542,34 @@ class DataDiscovery:
 
 
 
+class Chattering:
+
+    @staticmethod
+    def remove(df_alarms, threshold=0.1):
+        alarms = df_alarms.drop_duplicates(['TAGNAME']).reset_index(drop=True)
+        alarms.drop(['USRNAME', 'APPLICATION', 'TIMESTAMP_ACK', 'TIMESTAMP_IN', 'TIMESTAMP_OUT', 'NODENAME', 'USRFULLNAME',
+             'VALUE', 'EVENT', 'BATCH', 'ID_CYCLE', 'NOTE'], axis=1, inplace=True)
+
+        runlengths = [np.sort(np.array(df_alarms.TIMESTAMP_IN)[np.where(df_alarms['TAGNAME'] == alarm)[0]])[1:]
+                      - np.sort(np.array(df_alarms.TIMESTAMP_IN)[np.where(df_alarms['TAGNAME'] == alarm)[0]])[:-1]
+                      for alarm in alarms['TAGNAME']]
+
+        chatteringindices = []
+        n = len(runlengths)
+        for i in range(n):
+            chatteringindices.append(Chattering.__get_chatterindex(i, runlengths))
+        ind_to_supress = []
+        for chatteral in alarms['TAGNAME'][np.where(np.array(chatteringindices) >= threshold)[0]]:
+            for j in np.where(chatteral == df_alarms)[0]:
+                ind_to_supress.append(j)
+        data_nonchattered = df_alarms.drop(ind_to_supress).reset_index(drop=True)
+        return data_nonchattered
+
+    @staticmethod
+    def __get_chatterindex(i, run):
+        runlengths=[(pd.Timestamp(run[i][j], unit='ns', tz='utc')-pd.Timestamp(0, unit='s', tz='utc')).total_seconds()
+                          for j in range(len(run[i]))]
+        if len(runlengths) > 0:
+            return sum([len(np.where(np.array(runlengths) == rl)[0]) / rl for rl in list(set(runlengths))]) / len(runlengths)
+        else:
+            return 0
