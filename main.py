@@ -67,13 +67,18 @@ def test_data_preprocessing_database(read_from_file = True):
         oracle_alarm_reader.open_connection()
         df_alarms=oracle_alarm_reader.get_alarms(begin_time, end_time)
         oracle_alarm_reader.close_connection()
+        print(len(df_alarms))
+        chattering = Chattering()
+        df_non_chattering= chattering.remove(df_alarms, 0.1)
+        print(len(df_non_chattering))
 
         pd.set_option('display.max_columns', 20)
         pd.set_option('display.width', 1000)
 
         dict_machines=data_discovery.create_machine_status_df(df_status)
-        table_with_alarms=data_discovery.table_with_alarms(dict_machines, begin_time, end_time, df_alarms, time_radius=10)[0]
+        table_with_alarms=data_discovery.table_with_alarms(dict_machines, begin_time, end_time, df_non_chattering, time_radius=10)[0]
         table_with_alarms.to_csv('table_with_alarms.csv')
+        print(table_with_alarms)
 
     else:
         table_with_alarms=data_discovery.load_table_from_csv('table_with_alarms.csv')
@@ -105,11 +110,10 @@ if __name__ == "__main__":
     pd.set_option('display.width', 1000)
     #test_ora_conn()
     #test_osipi_conn()
-    table_with_alarms=test_data_preprocessing_database(read_from_file=True)
+    table_with_alarms=test_data_preprocessing_database(read_from_file=False)
     data_discovery=DataDiscovery()
     table_global=data_discovery.adding_columns_nearest_alarm_alt(table_with_alarms)
     split_dur_alarms = data_discovery.split_dur_alarms(table_global)
-    #print(df1)
     print(table_global)
     print(split_dur_alarms)
     #df2=test_data_preprocessing_file()
